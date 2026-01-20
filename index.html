@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <!-- Türkçe karakter desteği -->
+  <meta charset="utf-8">
+
+  <!-- Mobilde responsive görünüm -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Sekme başlığı -->
+  <title>CO2 · Karbon Ayak İzi Platformu (SaaS)</title>
+
+  <!-- Sayfa açıklaması (SEO / paylaşım) -->
+  <meta name="description" content="CO2: Scope 1-2-3 emisyon hesaplama, toplu Excel yükleme, otomatik raporlama.">
+
+  <!-- Bu sayfanın tüm tasarım stilleri buradan gelir -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="glow">
+  <!-- glow class arkaplanda gradient/parlama efektini verir -->
+
+  <header>
+    <!-- Üst menü alanı -->
+    <div class="container nav">
+
+      <!-- Sol: logo alanı -->
+      <div class="logo">
+        <!-- Logo svg sadece görsel -->
+        <svg width="45" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 22V10
+                   M12 10c2-5 7-6 9-3-3 3-6 4-9 3z
+                   M12 10C9 5 4 4 3 7c3 2 6 3 9 3z"
+                stroke="#34d399" stroke-width="2" fill="none"/>
+        </svg>
+        <span>Carbonizi</span>
+      </div>
+
+      <!-- Sağ: giriş butonu -->
+      <!-- Bu link kullanıcıyı login.html sayfasına götürür -->
+      <a href="login.html" id="btnTry" class="btn">Hemen deneyin</a>
+
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO bölümü: ürün tanıtımı + demo kartı aynı section içinde -->
+    <section class="container hero">
+      <div>
+        <!-- Üst rozet -->
+        <span class="badge">GHG Protocol · Scope 1 · Scope 2 · Scope 3</span>
+
+        <!-- Ana başlık -->
+        <h1>Karbon ayak izinizi<br> dakikalar içinde ölçün.</h1>
+
+        <!-- Kısa açıklama -->
+        <p class="lead">
+          Carbonizi, şirketlerin Scope 1–2–3 verilerini <b>toplu Excel</b> ile yükleyip,
+          otomatik CO₂ hesapladığı ve <b>PDF/Excel</b> rapor ürettiği bir web platformudur.
+        </p>
+
+        <!-- KPI kutuları, sadece tanıtım -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="lab">Toplu Yükleme</div>
+            <div class="val">Excel / CSV</div>
+          </div>
+          <div class="kpi">
+            <div class="lab">Raporlama</div>
+            <div class="val">PDF · XLSX</div>
+          </div>
+          <div class="kpi">
+            <div class="lab">Kapsam</div>
+            <div class="val">Scope 1–2–3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEMO: Bu kartın içindeki tüm dinamik davranışlar app.js tarafından yönetilir -->
+      <!-- Önemli: Buradaki id'ler app.js içinde document.getElementById(...) ile yakalanır -->
+      <div class="demo-wrap card" id="demo" style="grid-column:1/-1">
+        <div class="demo-card">
+
+          <!-- Sekmeler -->
+          <!-- tabCompany ve tabPersonal butonlarına app.js event listener ekler -->
+          <!-- Bu tıklamalar companyDemo / personalDemo görünürlüğünü değiştirir -->
+          <div style="grid-column:1/-1;display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;align-items:center">
+            <button class="btn" id="tabCompany">Şirket Mini Demo</button>
+            <button class="btn btn-outline" id="tabPersonal">Kişisel Günlük CO₂</button>
+
+            <!-- EF kilidi bilgisi buraya yazdırılır -->
+            <span id="efBanner" class="ef-lock" title="EF değerleri demo profile göre kilitlidir."></span>
+          </div>
+
+          <!-- Sol kolon: inputlar -->
+          <div id="leftCol">
+
+            <!-- Şirket demo formu -->
+            <!-- Başlangıçta görünür (display:block), kişisel sekmeye geçince kapanır -->
+            <div id="companyDemo" style="display:block">
+
+              <!-- Modül seçimi: s1/s2/s3 -->
+              <!-- mod değişince app.js refreshFields() çağrılır -->
+              <div>
+                <label>Modül</label>
+                <select id="mod">
+                  <option value="s2">Scope 2 · Elektrik</option>
+                  <option value="s1">Scope 1 · Yakıt</option>
+                  <option value="s3">Scope 3 · Taşımacılık</option>
+                </select>
+              </div>
+
+              <!-- Dönem inputu (demoda gösterim amaçlı ) -->
+              <div><label>Dönem</label><input id="per" placeholder="2025-01"></div>
+
+              <!-- Scope 2 alanları -->
+              <div id="s2Fields">
+                <div><label>Elektrik (kWh)</label><input id="kwh" type="number" value="25000"></div>
+                <div>
+                  <label>EF (kg CO₂/kWh) — kilitli</label>
+                  <!-- app.js updateEfBanner() ile buraya EF gösterilir -->
+                  <div id="s2EfView" class="pill mono">—</div>
+                </div>
+              </div>
+
+              <!-- Scope 1 alanları -->
+              <!-- mod = s1 olduğunda görünür -->
+              <div id="s1Fields" style="display:none">
+                <div><label>Dizel (L)</label><input id="diesel_l" type="number" value="1000"></div>
+                <div><label>Benzin (L)</label><input id="gas_l" type="number" value="0"></div>
+                <div><label>Doğalgaz (m³)</label><input id="ng_m3" type="number" value="0"></div>
+                <div><label>LPG (kg)</label><input id="lpg_kg" type="number" value="0"></div>
+              </div>
+
+              <!-- Scope 3 alanları -->
+              <!-- mod = s3 olduğunda görünür -->
+              <div id="s3Fields" style="display:none">
+                <div><label>Yük (ton)</label><input id="t_ton" type="number" value="10"></div>
+                <div><label>Kara yolu mesafe (km)</label><input id="km_road" type="number" value="100"></div>
+                <div><label>Demiryolu mesafe (km)</label><input id="km_rail" type="number" value="0"></div>
+                <div><label>Deniz yolu mesafe (km)</label><input id="km_ship" type="number" value="0"></div>
+              </div>
+
+              <!-- Şirket hesaplama butonları -->
+              <!-- calc: click olunca app.js hesaplar ve sonucu co2/co2t'ye yazar -->
+              <!-- clear: click olunca sonuçları temizler -->
+              <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+                <button class="btn" id="calc">Hesapla</button>
+                <button class="btn btn-outline" id="clear">Temizle</button>
+              </div>
+
+              <!-- Şirket sonuç alanları -->
+              <div class="demo-result">
+                <div class="pill">
+                  <div style="font-size:12px;color:var(--muted)">Sonuç (kg CO₂)</div>
+                  <!-- app.js hesap sonrası burayı günceller -->
+                  <div class="mono" id="co2">—</div>
+                </div>
+                <div class="pill">
+                  <div style="font-size:12px;color:var(--muted)">Sonuç (ton CO₂)</div>
+                  <!-- app.js hesap sonrası burayı günceller -->
+                  <div class="mono" id="co2t">—</div>
+                </div>
+              </div>
+            </div><!-- /companyDemo -->
+
+            <!-- Kişisel demo formu -->
+            <!-- tabPersonal seçilince açılır -->
+            <div id="personalDemo" style="display:none">
+              <div class="p-row-3">
+                <div><label>Evde kişi sayısı</label><input id="p_person" type="number" min="1" value="1" required></div>
+                <div><label>Elektrik faturası (TL/ay, hane)</label><input id="pp_e_tl" type="number" placeholder="örn 900" required></div>
+                <div><label>Doğalgaz faturası (TL/ay, hane)</label><input id="pp_g_tl" type="number" placeholder="örn 750" required></div>
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <div><label>Özel araç (km/gün)</label><input id="car_km_d" type="number" value="15" required></div>
+                <div><label>Toplu taşıma (km/gün)</label><input id="pt_km_d" type="number" value="10" required></div>
+              </div>
+
+              <div style="margin-top:10px">
+                <label>Duş süresi (dk/gün)</label>
+                <input id="sh_min_d" type="number" value="10" required>
+              </div>
+
+              <!-- EF notu kişisel demoda buraya yazılır -->
+              <div class="badge" id="pEfNote" style="margin-top:10px"></div>
+
+              <!-- p_calc ve p_clear butonları app.js kişisel hesaplama fonksiyonlarını tetikler -->
+              <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <button class="btn" id="p_calc" type="button">Hesapla</button>
+                <button class="btn btn-outline" id="p_clear" type="button">Temizle</button>
+              </div>
+
+              <div class="demo-result" style="margin-top:12px">
+                <div class="pill">
+                  <div style="font-size:12px;color:var(--muted)">Kişi başı günlük CO₂ (kg)</div>
+                  <div class="mono" id="p_co2">—</div>
+                </div>
+                <div class="pill">
+                  <div style="font-size:12px;color:var(--muted)">Kişi başı yıllık CO₂ (ton)</div>
+                  <div class="mono" id="p_co2_y">—</div>
+                </div>
+              </div>
+            </div><!-- /personalDemo -->
+          </div><!-- /leftCol -->
+
+          <!-- Sağ kolon: öneriler ve gauge -->
+          <div class="rightCol">
+
+            <!-- Şirket öneri alanı -->
+            <!-- Hesapla sonrası app.js:
+                 coGauge içine SVG gauge çizer,
+                 legendBox içine eşik yazdırır,
+                 coMsg içine sınıflandırma metni yazar,
+                 coTips içine önerileri listeler -->
+            <div class="advice" id="coAdvice" style="margin-top:12px; display:block">
+              <div class="gauge" id="coGauge"></div>
+              <div class="legend" id="legendBox"></div>
+              <div style="margin-top:10px" id="coMsg" class="mono">—</div>
+              <ul id="coTips" style="margin-top:6px;margin-left:18px;color:var(--muted)">
+                <li>Hesapla’ya tıklayın; burada değerlendirme ve öneriler gözükecek.</li>
+              </ul>
+            </div>
+
+            <!-- Kişisel öneri alanı -->
+            <!-- Kişisel hesapla sonrası app.js:
+                 pGauge içine gauge çizer,
+                 adviceBadge içine özet yazar,
+                 breakdown içine kalem bazlı dağılım yazar,
+                 tips içine öneri listeler -->
+            <div class="advice" id="pAdvice" style="margin-top:12px; display:none">
+              <div class="gauge" id="pGauge"></div>
+              <div class="legend">
+                <span class="chip lo">≤ 15 kg iyi</span>
+                <span class="chip mid">15–50 kg orta</span>
+                <span class="chip hi">> 50 kg yüksek</span>
+              </div>
+              <div style="margin-top:10px" id="adviceBadge" class="mono">—</div>
+              <div id="breakdown" style="font-size:14px;color:var(--muted);margin-top:6px">—</div>
+              <ul id="tips" style="margin-top:6px;margin-left:18px;color:var(--muted)">
+                <li>Değerlerinizi girip <b>Hesapla</b>’ya basın; burada kişisel öneriler çıkacak.</li>
+              </ul>
+            </div>
+
+          </div><!-- /rightCol -->
+        </div><!-- /demo-card -->
+      </div><!-- /demo-wrap -->
+    </section>
+
+    <!-- Özellikler bölümü: statik tanıtım -->
+    <section class="container section" id="features">
+      <h2>Özellikler</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Toplu Excel Yükleme</h3>
+          <ul>
+            <li>Standart şablon → hızlı içe aktarım</li>
+            <li>Otomatik alan doğrulama (dönem, birim, EF)</li>
+            <li>Hata raporu ve satır bazlı log</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Scope 1–2–3 Hesaplama</h3>
+          <ul>
+            <li>Yakıt, elektrik, ısı/buhar/soğutma</li>
+            <li>Taşımacılık: ton·km × EF</li>
+            <li>Location vs Market-based</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Raporlama & Dışa Aktarım</h3>
+          <ul>
+            <li>Yıllık trend ve kapsam kırılımı</li>
+            <li>PDF & Excel raporları</li>
+            <li>API entegrasyonu (opsiyonel)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- İletişim bölümü: statik içerik -->
+    <section class="container section" id="contact">
+      <h2>İletişim</h2>
+
+      <div class="grid-2 contact-single">
+        <div class="card">
+          <h3>Bize Ulaşın</h3>
+
+          <div class="card" style="padding:20px;background:#12172a;border-radius:12px;border:1px solid #1e2542;">
+            <p style="color:#aab1c5;font-size:15px;">📧
+              <a href="mailto:gizem.karatas.work@gmail.com"
+                 style="color:#84f;text-decoration:none;font-weight:600;">
+                gizem.karatas.work@gmail.com
+              </a>
+            </p>
+            <p style="color:#aab1c5;font-size:15px;">💼
+              <a href="https://www.linkedin.com/in/gizem-karata%C5%9F"
+                 target="_blank"
+                 style="color:#84f;text-decoration:none;font-weight:600;">
+                LinkedIn Profili
+              </a>
+            </p>
+            <p style="color:#aab1c5;font-size:14px;margin-top:10px;">
+              İş birliği, öneri veya demo talebi için ulaşabilirsiniz.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">© Carbonizi · 2025 · Gizlilik · Kullanım Şartları</div>
+  </footer>
+  
+  <!-- Demo ve kişisel hesaplama mantığı burada -->
+  <!-- buton click'leri, hesaplama, sonuç yazdırma, gauge çizimi, öneri listeleme işlerini yapar -->
+  <script src="app.js"></script>
+
+</body>
+</html>  

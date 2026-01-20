@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <!--  Karakter seti + responsive (mobil uyumluluk) -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Sayfa başlığı (sekme adı) -->
+  <title>Carbonizi · Dashboard</title>
+
+  <!--  SEO / açıklama -->
+  <meta name="description" content="Excel/CSV yükle, anlık CO₂ hesapla.">
+
+  <!--  SEKME ICON: tarayıcı sekmesinde görünen logo (filiz.svg) -->
+  <link rel="icon" type="image/svg+xml" href="filiz.svg">
+
+  <!--  Dashboard’a özel stil dosyası -->
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+<!-- =========================
+     HEADER / NAVBAR
+     - Logo + “Çık / Giriş” butonu
+     - Kullanıcı dashboard’dan ana sayfaya dönebilir
+========================== -->
+<header>
+  <div class="container nav">
+    <div class="logo">
+      <!--  Inline SVG logo (Filiz ikon) -->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M12 22V10
+                 M12 10c2-5 7-6 9-3-3 3-6 4-9 3z
+                 M12 10C9 5 4 4 3 7c3 2 6 3 9 3z"
+              stroke="#34d399" stroke-width="2" fill="none"/>
+      </svg>
+      <span>Carbonizi</span>
+    </div>
+
+    <div class="row">
+      <!--   index.html’e gider (çıkış/giriş akışı) -->
+      <a class="btn secondary" href="./index.html">Çıkış/ Giriş</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!--  Dashboard başlığı / açıklama -->
+  <h1>Hoş geldiniz!</h1>
+  <p class="muted">
+    Aşağıdan <b>Scope 1–2–3</b> için dosya yükleyin; anlık hesaplama, grafik ve raporları görün.
+  </p>
+
+  <!-- =========================
+       TAB’ler
+       - Kullanıcı hangi scope’u hesaplayacağını seçiyor
+       - JS: .tab tıklanınca ilgili section görünür, diğerleri gizlenir
+       - data-scope HTML attribute → JS bu değeri okuyarak "s1/s2/s3" section’ını gösterir
+  ========================== -->
+  <div class="tabs">
+    <div class="tab active" data-scope="s1">Scope 1 · Yakıt</div>
+    <div class="tab" data-scope="s2">Scope 2 · Elektrik</div>
+    <div class="tab" data-scope="s3">Scope 3 · Taşımacılık</div>
+  </div>
+
+  <!-- =========================================================
+       ✅ SCOPE 1 SECTION (Yakıt)
+       - Dosya yükle (Excel/CSV)
+       - “Geçmişten seç” → Premium kullanıcılar Firestore’dan eski upload’ı seçebilir
+       - Hesapla → dashboard.core.js içindeki calcS1 event’i çalışır
+       - Grafik (chartS1) → Chart.js ile pie chart basılır
+  ========================================================== -->
+  <section id="s1" class="grid">
+    <div class="card">
+      <h2>Dosya yükle (S1)</h2>
+
+      <!-- ✅ Kullanıcı dosya yükler -->
+      <input type="file" id="fileS1" accept=".xlsx,.csv">
+
+      <!-- ✅ Premium: Geçmişten seç dropdown -->
+      <div class="row" style="margin-top:8px">
+        <label style="flex:1">
+          <div class="muted">Geçmişten seç (S1)</div>
+
+          <!-- ✅ JS burayı doldurur: dashboard.firebase.js → loadUploads / fillScopePicker -->
+          <select id="pickS1" class="pill">
+            <option value="">— Seç —</option>
+          </select>
+        </label>
+
+        <!-- ✅ Seçilen upload’ı Firestore’dan çekip hesaplamaya dahil eder -->
+        <button class="btn ghost" id="loadS1" type="button">Yükle</button>
+      </div>
+
+      <!-- ✅ Hesapla / Şablon indir -->
+      <div class="row" style="margin-top:10px">
+        <!-- ✅ Hesapla: dashboard.core.js → calcS1 click listener -->
+        <button class="btn" id="calcS1" type="button">Hesapla</button>
+
+        <!-- ✅ Şablon indir: kullanıcı doğru kolonlarla dosya hazırlasın diye -->
+        <button class="btn secondary" id="sampleS1" type="button">Şablon indir (S1)</button>
+      </div>
+
+      <!-- ✅ Sonuç alanı (kg ve ton) - JS bu span’lere yazar -->
+      <div class="pill" style="margin-top:14px;font-size:20px">
+        <span class="muted">Toplam (kg CO₂): </span>
+        <span id="s1kg" class="mono">—</span>
+      </div>
+      <div class="pill" style="margin-top:14px;font-size:20px">
+        <span class="muted">Toplam (ton CO₂): </span>
+        <span id="s1t" class="mono">—</span>
+      </div>
+
+      <!-- ✅ Dosya validasyon bilgisi -->
+      <p class="muted" style="margin-top:10px;font-size:14px">
+        Zorunlu kolonlar:
+        <code class="mono">sirket_kodu, tesis_kodu, tarih, yakit_tipi, miktar, birim, veri_kaynagi</code>
+      </p>
+
+      <!-- ✅ Hata mesajları buraya basılır (eksik kolon / yanlış veri vb.) -->
+      <div id="s1errors" class="muted" style="margin-top:6px;color:#ffd9df"></div>
+    </div>
+
+    <!-- ✅ Chart alanı -->
+    <div class="card">
+      <h2>Dağılım</h2>
+      <canvas id="chartS1" height="180"></canvas>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       ✅ SCOPE 2 SECTION (Elektrik)
+       - Dosyadan tüketim_kwh okunur
+       - EF: gridRegion + gridYear dropdown’larından gelir
+       - Premium geçmiş seçimi de mevcut
+  ========================================================== -->
+  <section id="s2" class="grid" style="display:none">
+    <div class="card">
+      <h2>Dosya yükle (S2)</h2>
+      <input type="file" id="fileS2" accept=".xlsx,.csv">
+
+      <!-- ✅ Premium: Geçmişten seç -->
+      <div class="row" style="margin-top:8px">
+        <label style="flex:1">
+          <div class="muted">Geçmişten seç (S2)</div>
+          <select id="pickS2" class="pill">
+            <option value="">— Seç —</option>
+          </select>
+        </label>
+        <button class="btn ghost" id="loadS2" type="button">Yükle</button>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="calcS2" type="button">Hesapla</button>
+        <button class="btn secondary" id="sampleS2" type="button">Şablon indir (S2)</button>
+      </div>
+
+      <div class="pill" style="margin-top:10px">
+        <span class="muted">Toplam (kg CO₂): </span><span id="s2kg" class="mono">—</span>
+      </div>
+      <div class="pill" style="margin-top:8px">
+        <span class="muted">Toplam (ton CO₂): </span><span id="s2t" class="mono">—</span>
+      </div>
+
+      <p class="muted" style="margin-top:10px;font-size:12px">
+        Zorunlu kolonlar:
+        <code class="mono">sirket_kodu, tesis_kodu, ay, yil, tuketim_kwh, veri_kaynagi</code>
+      </p>
+      <div id="s2errors" class="muted" style="margin-top:6px;color:#ffd9df"></div>
+    </div>
+
+    <div class="card"><h2>Dağılım</h2><canvas id="chartS2" height="180"></canvas></div>
+  </section>
+
+  <!-- =========================================================
+       ✅ SCOPE 3 SECTION (Taşımacılık)
+       - ton * km * EF hesabı (road/rail/ship)
+       - Dosyadaki mod alanı normalize edilir (karayolu → road gibi)
+  ========================================================== -->
+  <section id="s3" class="grid" style="display:none">
+    <div class="card">
+      <h2>Dosya yükle (S3)</h2>
+      <input type="file" id="fileS3" accept=".xlsx,.csv">
+
+      <!-- ✅ Premium: Geçmişten seç -->
+      <div class="row" style="margin-top:8px">
+        <label style="flex:1">
+          <div class="muted">Geçmişten seç (S3)</div>
+          <select id="pickS3" class="pill">
+            <option value="">— Seç —</option>
+          </select>
+        </label>
+        <button class="btn ghost" id="loadS3" type="button">Yükle</button>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="calcS3" type="button">Hesapla</button>
+        <button class="btn secondary" id="sampleS3" type="button">Şablon indir (S3)</button>
+      </div>
+
+      <div class="pill" style="margin-top:10px">
+        <span class="muted">Toplam (kg CO₂): </span><span id="s3kg" class="mono">—</span>
+      </div>
+      <div class="pill" style="margin-top:8px">
+        <span class="muted">Toplam (ton CO₂): </span><span id="s3t" class="mono">—</span>
+      </div>
+
+      <p class="muted" style="margin-top:10px;font-size:12px">
+        Zorunlu kolonlar:
+        <code class="mono">sirket_kodu, tesis_kodu, tarih, mod, ton, km, ef_kaynagi</code>
+      </p>
+      <div id="s3errors" class="muted" style="margin-top:6px;color:#ffd9df"></div>
+    </div>
+
+    <div class="card"><h2>Dağılım</h2><canvas id="chartS3" height="180"></canvas></div>
+  </section>
+
+  <!-- =========================================================
+       ✅ RAPORLAR (monthly/yearly, scope/all)
+       - “Sorgula” → store’daki hesaplanmış satırları gruplayıp tablo+chart üretir
+       - Premium’da: CSV/EXCEL export + Insights açılır
+       - Upgrade butonu → Firestore’daki user.plan = premium yapar (demo amaçlı)
+  ========================================================== -->
+  <section id="reports" class="grid" style="margin-top:16px">
+    <div class="card">
+      <h2>Raporlar</h2>
+
+      <!-- ✅ Premium upgrade banner -->
+      <div class="banner upgrade" id="upgradeBox">
+        <div class="text">
+          <div style="font-weight:800;margin-bottom:12px;font-size:20px">Premium Özelliklerini Gör</div>
+          <div class="muted" style="font-size:16px">
+            Aylık/yıllık trendler, scope karşılaştırma ve CSV/EXCEL rapor çıktıları açılır.
+          </div>
+        </div>
+
+        <!-- ✅ Premium aktif olunca görünür -->
+        <div id="premiumStatus" class="muted"
+             style="font-weight:800;color:var(--accent); margin-left:auto; display:none;">
+          Premium Kullanıcı
+        </div>
+
+        <!-- ✅ Premium’a geç (demo) -->
+        <button class="btn secondary" id="btnUpgrade" type="button">Premium'a Geç</button>
+      </div>
+
+      <!-- ✅ Filtre satırı -->
+      <div class="row">
+        <label>
+          <div class="muted">Dönem</div>
+          <select id="period" class="pill">
+            <option value="monthly">Aylık</option>
+            <option value="yearly">Yıllık</option>
+          </select>
+        </label>
+
+        <label>
+          <div class="muted">Scope</div>
+          <select id="scopeSel" class="pill">
+            <option value="s1">Scope 1</option>
+            <option value="s2">Scope 2</option>
+            <option value="s3">Scope 3</option>
+            <option value="all">Tümü (S1+S2+S3)</option>
+          </select>
+        </label>
+
+        <!-- ✅ Scope 2 için grid EF seçimi -->
+        <label>
+          <div class="muted">Ülke/Şebeke</div>
+          <select id="gridRegion" class="pill">
+            <option value="TR" selected>Türkiye (TR)</option>
+            <option value="EU27">AB (EU27 mix)</option>
+            <option value="INTL">Uluslararası ortalama</option>
+          </select>
+        </label>
+
+        <label>
+          <div class="muted">Yıl</div>
+          <select id="gridYear" class="pill">
+            <option>2025</option>
+            <option selected>2024</option>
+            <option>2023</option>
+          </select>
+        </label>
+
+        <!-- ✅ Rapor üret -->
+        <button class="btn" id="runReport" type="button">Sorgula</button>
+
+        <!-- ✅ Exportlar sadece premium’da gösterilir -->
+        <button class="btn ghost premium-only" id="dlCsv" style="display:none" type="button">CSV İNDİR</button>
+        <button class="btn ghost premium-only" id="dlJson" style="display:none" type="button">EXCEL İNDİR</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Özet</h2>
+
+      <!-- ✅ Rapor grafiği (Chart.js) -->
+      <canvas id="reportChart" height="180"></canvas>
+
+      <!-- ✅ Rapor tablosu (JS burada HTML table basar) -->
+      <div id="reportTable" class="mono"
+           style="margin-top:12px;overflow:auto;max-height:260px;border-top:1px solid var(--border);padding-top:10px">
+      </div>
+
+      <!-- ✅ Premium: ek içgörüler -->
+      <div id="insights" class="premium-only"
+           style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">© Carbonizi · Dashboard</div>
+</main>
+
+<!-- =========================
+     ✅ DIŞ KÜTÜPHANELER
+     - xlsx: Excel/CSV okuma + yazma
+     - chart.js: grafik çizimi
+========================== -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- =========================
+     ✅ CORE LOGIC (dashboard.core.js)
+     - Dosya okuma
+     - Validasyon
+     - Scope hesaplama (S1/S2/S3)
+     - Store + rapor üretme + export
+========================== -->
+<script src="dashboard.core.js"></script>
+
+<!-- =========================
+     ✅ FIREBASE MODULE (dashboard.firebase.js)
+     - auth state kontrol
+     - plan (basic/premium) okuma
+     - upload kaydetme / geçmişten çekme
+     - premium upgrade demo
+========================== -->
+<script type="module" src="dashboard.firebase.js"></script>
+
+</body>
+</html>
