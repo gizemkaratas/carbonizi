@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Carbonizi · Giriş / Kayıt</title>
+
+  <style>
+    :root{
+      --bg:#0b0f1a; --fg:#e6e9f2; --muted:#aab1c5;
+      --card:#12172a; --border:#1e2542;
+      --accent:#84f;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      background:
+        radial-gradient(900px 350px at 20% -10%, rgba(138,122,255,.25), transparent 60%),
+        radial-gradient(700px 280px at 80% -10%, rgba(79,255,255,.16), transparent 60%),
+        linear-gradient(180deg,#0b0f1a,#0e1324 35%,#0b0f1a);
+      color:var(--fg);
+      font:15px/1.55 system-ui;
+      display:flex; align-items:center; justify-content:center;
+      padding:22px;
+    }
+    .shell{width:min(880px,100%)}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--muted)}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:900}
+    .dot{width:28px;height:28px;border-radius:10px;background:linear-gradient(135deg,#84f,#5ff)}
+    .card{
+      background:rgba(20,25,50,.9);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:22px;
+      position:relative;
+    }
+    .close-x{
+      position:absolute; right:14px; top:14px;
+      width:36px;height:36px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(255,255,255,.12);
+      cursor:pointer;
+    }
+    h1{margin:0 0 6px}
+    .sub{margin:0 0 16px;color:var(--muted)}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{margin-top:12px}
+    label{font-size:12px;color:var(--muted)}
+    input{
+      width:100%;padding:14px;border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      color:#fff;
+    }
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    button{
+      padding:14px;border-radius:14px;font-weight:800;
+      border:1px solid rgba(255,255,255,.1);
+      cursor:pointer;color:#fff;
+    }
+    .btn-login{background:rgba(34,197,94,.3)}
+    .btn-signup{background:rgba(138,122,255,.35)}
+    #msg{
+      margin-top:12px;
+      font-size:13px;
+      display:none;
+      background:rgba(255,255,255,.05);
+      padding:10px;border-radius:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <div class="top">
+      <div class="brand"><div class="dot"></div> Carbonizi</div>
+    </div>
+
+    <div class="card">
+      <div class="close-x" onclick="location.href='index.html'">✕</div>
+
+      <h1 id="title">Giriş yap</h1>
+      <p class="sub" id="subtitle">Hesabınla giriş yap.</p>
+
+      <div class="row2" id="nameRow" style="display:none">
+        <div class="field">
+          <label>Ad Soyad</label>
+          <input id="dispName">
+        </div>
+        <div class="field">
+          <label>Şirket</label>
+          <input id="company">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>E-posta</label>
+        <input id="email" type="email">
+      </div>
+
+      <div class="field">
+        <label>Şifre</label>
+        <input id="pass" type="password">
+      </div>
+
+      <div class="actions">
+        <button class="btn-login" id="btnLogin" type="button">Giriş</button>
+        <button class="btn-signup" id="btnSignup" type="button">Kayıt Ol</button>
+      </div>
+
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      updateProfile,
+      setPersistence,
+      browserSessionPersistence
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPGjInLgdVkN0mSSE0TRsAJwCCDax7TiI",
+      authDomain: "carbonizi.firebaseapp.com",
+      projectId: "carbonizi",
+      storageBucket: "carbonizi.firebasestorage.app",
+      messagingSenderId: "789010907611",
+      appId: "1:789010907611:web:8d279f92ad8a23b75a67fe"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserSessionPersistence);
+    const db = getFirestore(app);
+
+    const $ = id => document.getElementById(id);
+    const msg = $("msg");
+    let signupMode = false;
+
+    function show(t){
+      msg.style.display="block";
+      msg.textContent=t;
+    }
+
+    async function saveUserProfile(user){
+      const displayName = $("dispName").value.trim();
+      const company = $("company").value.trim();
+      const email = ($("email").value || user.email || "").trim();
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: email,
+        displayName: displayName || (user.displayName || ""),
+        company: company || "",
+        plan: "basic",
+        createdAt: serverTimestamp(),   // ✅ VAR
+        lastLoginAt: serverTimestamp()  // ✅ VAR
+      }, { merge: true });
+    }
+
+    $("btnLogin").onclick = async () => {
+      signupMode = false;
+      $("nameRow").style.display="none";
+      try{
+        const cred = await signInWithEmailAndPassword(auth, $("email").value, $("pass").value);
+        await saveUserProfile(cred.user);
+        show("Giriş başarılı");
+        setTimeout(()=>location.href="dashboard.html",500);
+      }catch(e){
+        show("Hata: " + e.message);
+      }
+    };
+
+    $("btnSignup").onclick = async () => {
+      if(!signupMode){
+        signupMode = true;
+        $("nameRow").style.display="grid";
+        show("Bilgileri girip tekrar Kayıt Ol'a bas");
+        return;
+      }
+      try{
+        const cred = await createUserWithEmailAndPassword(auth, $("email").value, $("pass").value);
+        if($("dispName").value){
+          await updateProfile(cred.user, { displayName: $("dispName").value });
+        }
+        await saveUserProfile(cred.user);
+        show("Kayıt başarılı");
+        setTimeout(()=>location.href="dashboard.html",500);
+      }catch(e){
+        show("Hata: " + e.message);
+      }
+    };
+  </script>
+</body>
+</html>
