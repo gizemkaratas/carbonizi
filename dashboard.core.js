@@ -7,6 +7,25 @@ const safeParseFloat = (v)=>{
   const n = parseFloat(String(v ?? '').toString().replace(',','.'));
   return isFinite(n)? n : NaN;
 };
+
+// ✅ EKLENDİ: TR formatlı sayıları (27.498,66) gibi güvenle number'a çevirir
+const toNum = (v)=>{
+  if (typeof v === "number") return isFinite(v) ? v : NaN;
+  let s = String(v ?? "").trim();
+  if(!s) return NaN;
+
+  // "27.498,66" -> "27498.66"
+  s = s.replace(/\s+/g,'');
+  s = s.replace(/[^\d.,-]/g,'');     // kg, tCO2 vb. temizle
+  if (s.includes('.') && s.includes(',')) {
+    s = s.replaceAll('.', '').replace(',', '.');
+  } else {
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isFinite(n) ? n : NaN;
+};
+
 const read = async f=>{
   const b=await f.arrayBuffer();
   const wb=XLSX.read(b,{type:'array'});
@@ -427,6 +446,15 @@ calcS2.addEventListener('click', async ()=>{
   const errorsEl=document.getElementById('s2errors'); errorsEl.textContent='';
   const f=fileS2.files[0];
   const hist = await getSelectedHistoryItems('s2');
+
+  // ✅ EKLENDİ: geçmişten gelen item'ları normalize et (kg string olabilir)
+  const histItems = (hist.items||[]).map(it=>({
+    ...it,
+    scope:'s2',
+    category: it?.category || 'elektrik',
+    kg: (isFinite(toNum(it?.kg)) ? toNum(it.kg) : 0)
+  }));
+
   let rows = [];
   if(!f && !hist.uploadId) return alert('Dosya seçin veya geçmişten bir kayıt seçin');
   if(f){
@@ -463,12 +491,21 @@ calcS2.addEventListener('click', async ()=>{
     });
   });
 
-  const combinedItems = [...(hist.items||[]), ...toAdd];
-  const combinedSumKg = combinedItems.reduce((a,b)=>a + (b?.kg||0), 0);
+  // ✅ DEĞİŞTİ: hist.items yerine normalize histItems
+  const combinedItems = [...histItems, ...toAdd];
+
+  // ✅ DEĞİŞTİ: kg'leri güvenli topla
+  const combinedSumKg = combinedItems.reduce(
+    (a,b)=> a + (isFinite(toNum(b?.kg)) ? toNum(b.kg) : 0),
+    0
+  );
+
+  // ✅ DEĞİŞTİ: combinedParts kg'leri güvenli topla
   const combinedParts = {};
   combinedItems.forEach(it=>{
-    const k = it?.category || 'other';
-    combinedParts[k] = (combinedParts[k]||0) + (it?.kg||0);
+    const k = it?.category || 'elektrik';
+    const kg = isFinite(toNum(it?.kg)) ? toNum(it.kg) : 0;
+    combinedParts[k] = (combinedParts[k]||0) + kg;
   });
 
   replaceScopeInStore('s2', combinedItems);
@@ -489,13 +526,15 @@ calcS2.addEventListener('click', async ()=>{
   document.getElementById('s2kg').textContent = nf.format(combinedSumKg);
   document.getElementById('s2t').textContent  = nf2.format(combinedSumKg/1000);
 
-const ctx = document.getElementById('chartS2');
-makePie(
-  ctx,
-  Object.keys(combinedParts),
-  Object.values(combinedParts),
-  `Scope 2 (EF=${gridEF})`
- );
+  const ctx = document.getElementById('chartS2');
+
+  // ✅ SENİN EKLEDİĞİN DOĞRU HALİ: combinedParts ile çiz
+  makePie(
+    ctx,
+    Object.keys(combinedParts),
+    Object.values(combinedParts),
+    `Scope 2 (EF=${gridEF})`
+  );
 });
 
 /* ===== Scope 3 ===== */
@@ -759,5 +798,3 @@ function applyPremiumUI(){
 }
 window.applyPremiumUI = applyPremiumUI;
 applyPremiumUI(); // ilk render (basic)
-
-
