@@ -489,8 +489,13 @@ calcS2.addEventListener('click', async ()=>{
   document.getElementById('s2kg').textContent = nf.format(combinedSumKg);
   document.getElementById('s2t').textContent  = nf2.format(combinedSumKg/1000);
 
-  const ctx = document.getElementById('chartS2');
-  makePie(ctx, ['elektrik'], [parts.elektrik], `Scope 2 (EF=${gridEF})`);
+const ctx = document.getElementById('chartS2');
+makePie(
+  ctx,
+  Object.keys(combinedParts),
+  Object.values(combinedParts),
+  `Scope 2 (EF=${gridEF})`
+ );
 });
 
 /* ===== Scope 3 ===== */
@@ -754,4 +759,5 @@ function applyPremiumUI(){
 }
 window.applyPremiumUI = applyPremiumUI;
 applyPremiumUI(); // ilk render (basic)
+
 
