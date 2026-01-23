@@ -7,6 +7,26 @@ const safeParseFloat = (v)=>{
   const n = parseFloat(String(v ?? '').toString().replace(',','.'));
   return isFinite(n)? n : NaN;
 };
+// ✅ BURAYA EKLE
+function parseExcelDate(v){
+  if (typeof v === "number" && isFinite(v)) {
+    const excelEpoch = Date.UTC(1899, 11, 30);
+    return new Date(excelEpoch + v * 86400000);
+  }
+
+  if (v instanceof Date && !isNaN(v)) return v;
+
+  const s = String(v ?? "").trim();
+  if(!s) return new Date(NaN);
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s);
+
+  const m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  if (m) return new Date(+m[3], (+m[2]) - 1, +m[1]);
+
+  return new Date(s);
+}
+
 
 // ✅ EKLENDİ: TR formatlı sayıları (27.498,66) gibi güvenle number'a çevirir
 const toNum = (v)=>{
@@ -382,7 +402,7 @@ calcS1.addEventListener('click', async ()=>{
   const toAdd=[];
 
   rows.forEach((r, idx)=>{
-    const d = new Date(r.tarih);
+    const d = parseExcelDate(r.tarih);
     const yakitRaw = String(r.yakit_tipi||'').toLowerCase().trim();
     const yakitKey = yakitRaw.replaceAll('ğ','g').replaceAll('ı','i');
     const birim = String(r.birim||'').toLowerCase().trim();
@@ -798,3 +818,4 @@ function applyPremiumUI(){
 }
 window.applyPremiumUI = applyPremiumUI;
 applyPremiumUI(); // ilk render (basic)
+
