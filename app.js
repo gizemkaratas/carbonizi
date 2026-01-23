@@ -24,7 +24,7 @@ const EF_S1 = {
   dizel:    { litre: 2.64 },   // 1 litre dizel -> 2.64 kg CO2
   benzin:   { litre: 2.31 },   // 1 litre benzin -> 2.31 kg CO2
   dogalgaz: { m3: 1.93 },      // 1 m3 doğalgaz -> 1.93 kg CO2
-  lpg:      { kg: 1.61 }       // 1 kg LPG -> 1.61 kg CO2
+  lpg:      { kg: 2.98 }       // 1 kg LPG -> 2.98 kg CO2
 };
 
 // Scope 2: Ülke/şebeke karması ve yıla göre elektrik EF (kg CO2/kWh)
@@ -465,3 +465,4 @@ document.getElementById('p_clear')?.addEventListener('click', () => {
 
 // ilk açılışta EF bilgilerini yaz
 updateEfBanner();
+
