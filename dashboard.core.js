@@ -62,11 +62,11 @@ const EF_S1 = {
   'dizel':     { 'litre': 2.64, 'l': 2.64, 'kg': 3.16 },
   'benzin':    { 'litre': 2.31, 'l': 2.31 },
   'dogalgaz':  { 'm3': 1.93 }, 'doğalgaz': { 'm3': 1.93 },
-  'lpg':       { 'litre': 1.51, 'l': 1.51, 'kg': 1.61 },
+  'lpg':       { 'litre': 1.51, 'l': 1.51, 'kg': 2.98 },
   'komur':     { 'kg': 2.42 }, 'kömür': { 'kg': 2.42 }
 };
 const EF_S2_GRID = {
-  TR:   { 2025: 0.405, 2024: 0.420, 2023: 0.440 },
+  TR:   { 2025: 0.469, 2024: 0.469, 2023: 0.469 },
   EU27: { 2025: 0.230, 2024: 0.250, 2023: 0.270 },
   INTL: { 2025: 0.450, 2024: 0.470, 2023: 0.490 }
 };
@@ -754,3 +754,4 @@ function applyPremiumUI(){
 }
 window.applyPremiumUI = applyPremiumUI;
 applyPremiumUI(); // ilk render (basic)
+
